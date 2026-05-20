@@ -1,0 +1,61 @@
+@baseUrl = http://127.0.0.1:3000
+@todoId = 11111111-1111-1111-1111-111111111111
+
+### Health check
+GET {{baseUrl}}/health
+
+### Get all todos
+GET {{baseUrl}}/todos
+
+### Create a todo
+POST {{baseUrl}}/todos
+Content-Type: application/json
+
+{
+  "title": "Learn"
+}
+
+### Create a todo with invalid input
+POST {{baseUrl}}/todos
+Content-Type: application/json
+
+{
+  "title": "   "
+}
+
+### Get a todo by ID
+GET {{baseUrl}}/todos/{{todoId}}
+
+### Get a missing todo
+GET {{baseUrl}}/todos/00000000-0000-0000-0000-000000000000
+
+### Update a todo
+PATCH {{baseUrl}}/todos/{{todoId}}
+Content-Type: application/json
+
+{
+  "title": "Updated title",
+  "completed": true
+}
+
+### Update only the completed flag
+PATCH {{baseUrl}}/todos/{{todoId}}
+Content-Type: application/json
+
+{
+  "completed": false
+}
+
+### Update with invalid title
+PATCH {{baseUrl}}/todos/{{todoId}}
+Content-Type: application/json
+
+{
+  "title": "   "
+}
+
+### Delete a todo
+DELETE {{baseUrl}}/todos/{{todoId}}
+
+### Delete a missing todo
+DELETE {{baseUrl}}/todos/00000000-0000-0000-0000-000000000000

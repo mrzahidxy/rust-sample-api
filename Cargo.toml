@@ -1,0 +1,13 @@
+[package]
+name = "rust-api"
+version = "0.1.0"
+edition = "2021"
+default-run = "rust-api"
+
+[dependencies]
+axum = "0.7"
+dotenvy = "0.15"
+serde = { version = "1", features = ["derive"] }
+sqlx = { version = "0.8", features = ["postgres", "runtime-tokio-rustls", "uuid"] }
+tokio = { version = "1", features = ["full"] }
+uuid = { version = "1", features = ["serde", "v4"] }
