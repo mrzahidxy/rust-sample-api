@@ -1,13 +1,25 @@
 [package]
-name = "rust-api"
+name = "{{project-name}}"
 version = "0.1.0"
 edition = "2021"
-default-run = "rust-api"
+default-run = "{{project-name}}"
 
 [dependencies]
 axum = "0.7"
 dotenvy = "0.15"
+serde_json = "1"
 serde = { version = "1", features = ["derive"] }
-sqlx = { version = "0.8", features = ["postgres", "runtime-tokio-rustls", "uuid"] }
+sqlx = { version = "0.8", features = ["postgres", "runtime-tokio-rustls", "uuid", "macros", "migrate"] }
 tokio = { version = "1", features = ["full"] }
 uuid = { version = "1", features = ["serde", "v4"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+tower-http = { version = "0.6", features = ["trace", "cors", "compression-gzip"] }
+
+sha2 = "0.10"
+argon2 = "0.5"
+jsonwebtoken = "9"
+
+[dev-dependencies]
+tower = { version = "0.5", features = ["util"] }
+http-body-util = "0.1"

@@ -1,0 +1,48 @@
+name: CI
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  generated-service:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-bookworm
+        env:
+          POSTGRES_USER: app
+          POSTGRES_PASSWORD: app
+          POSTGRES_DB: app
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U app -d app"
+          --health-interval 2s --health-timeout 3s --health-retries 15
+    env:
+      DATABASE_URL: postgres://app:app@localhost:5432/app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-generate
+      - name: Generate a differently named service
+        run: |
+          if test -f cargo-generate.toml; then
+            cargo generate --path . --name ci-service --destination /tmp --silent
+          else
+            mkdir -p /tmp/ci-service
+            cp -a . /tmp/ci-service/
+          fi
+      - name: Format
+        working-directory: /tmp/ci-service
+        run: cargo fmt --all -- --check
+      - name: Lint
+        working-directory: /tmp/ci-service
+        run: cargo clippy --locked --all-targets -- -D warnings
+      - name: Test
+        working-directory: /tmp/ci-service
+        run: cargo test --locked --all-targets
