@@ -48,12 +48,12 @@ pub fn app(state: AppState) -> Router {
         .fallback(|| async { AppError::not_found("Route not found") })
         .layer(axum::extract::DefaultBodyLimit::max(1024 * 1024))
         .layer(tower_http::compression::CompressionLayer::new())
-        .layer(cors)
         .layer(TraceLayer::new_for_http().make_span_with(|request: &axum::http::Request<axum::body::Body>| {
             tracing::info_span!("http_request", method = %request.method(), path = %request.uri().path(),
                 request_id = ?request.headers().get("x-request-id"))
         }))
         .layer(axum::middleware::from_fn_with_state(state.clone(), middleware::http::context))
+        .layer(cors)
         .with_state(state)
 }
 
