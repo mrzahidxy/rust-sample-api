@@ -1,43 +1,43 @@
-mod error;
-mod models;
-mod routes;
-mod state;
-
-use std::{env, net::SocketAddr};
-
-use axum::Router;
-use dotenvy::dotenv;
-use tokio::net::TcpListener;
-
-use crate::{
-    routes::{health::health_routes, todos::todo_routes},
-    state::AppState,
-};
+use {{crate_name}}::{app, config::Config, state::AppState};
+use tokio::{net::TcpListener, signal};
+use tracing_subscriber::EnvFilter;
 
 #[tokio::main]
-async fn main() {
-    dotenv().ok();
+async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    dotenvy::dotenv().ok();
+    tracing_subscriber::fmt()
+        .with_env_filter(
+            EnvFilter::try_from_default_env().unwrap_or_else(|_| "info,tower_http=info".into()),
+        )
+        .json()
+        .init();
+    let config = Config::from_env()?;
+    let state = AppState::connect(&config).await?;
+    let listener = TcpListener::bind(config.address).await?;
+    tracing::info!(address = %listener.local_addr()?, "server listening");
+    axum::serve(
+        listener,
+        app(state.clone()).into_make_service_with_connect_info::<std::net::SocketAddr>(),
+    )
+    .with_graceful_shutdown(shutdown_signal())
+    .await?;
+    state.db.close().await;
+    Ok(())
+}
 
-    let database_url =
-        env::var("DATABASE_URL").expect("DATABASE_URL must be set before starting the server");
-
-    let app_state = AppState::new(&database_url)
-        .await
-        .expect("failed to connect to PostgreSQL");
-
-    let app = Router::new()
-        .merge(health_routes())
-        .merge(todo_routes())
-        .with_state(app_state);
-    let address = SocketAddr::from(([127, 0, 0, 1], 3000));
-
-    println!("Server running on http://{address}");
-
-    let listener = TcpListener::bind(address)
-        .await
-        .expect("failed to bind TCP listener");
-
-    axum::serve(listener, app)
-        .await
-        .expect("failed to start HTTP server");
+async fn shutdown_signal() {
+    let ctrl_c = async {
+        signal::ctrl_c().await.expect("install Ctrl+C handler");
+    };
+    #[cfg(unix)]
+    let terminate = async {
+        signal::unix::signal(signal::unix::SignalKind::terminate())
+            .expect("install SIGTERM handler")
+            .recv()
+            .await;
+    };
+    #[cfg(not(unix))]
+    let terminate = std::future::pending::<()>();
+    tokio::select! { _ = ctrl_c => {}, _ = terminate => {} }
+    tracing::info!("shutdown requested");
 }

@@ -1,61 +1,66 @@
 @baseUrl = http://127.0.0.1:3000
-@todoId = 11111111-1111-1111-1111-111111111111
+@token = paste-access-token-here
+@refreshToken = paste-refresh-token-here
+@projectId = 00000000-0000-0000-0000-000000000000
+@taskId = 00000000-0000-0000-0000-000000000000
 
-### Health check
+### Health
 GET {{baseUrl}}/health
 
-### Get all todos
-GET {{baseUrl}}/todos
+### Readiness
+GET {{baseUrl}}/ready
 
-### Create a todo
-POST {{baseUrl}}/todos
+### Register user
+POST {{baseUrl}}/api/auth/register
 Content-Type: application/json
 
-{
-  "title": "Learn"
-}
+{"email":"user@example.com","password":"a-strong-development-password","name":"Sample User"}
 
-### Create a todo with invalid input
-POST {{baseUrl}}/todos
+### Login (copy access_token and refresh_token from response)
+POST {{baseUrl}}/api/auth/login
 Content-Type: application/json
 
-{
-  "title": "   "
-}
+{"email":"admin@example.com","password":"a-strong-development-password"}
 
-### Get a todo by ID
-GET {{baseUrl}}/todos/{{todoId}}
+### Current user
+GET {{baseUrl}}/api/auth/me
+Authorization: Bearer {{token}}
 
-### Get a missing todo
-GET {{baseUrl}}/todos/00000000-0000-0000-0000-000000000000
-
-### Update a todo
-PATCH {{baseUrl}}/todos/{{todoId}}
+### Create project
+POST {{baseUrl}}/api/projects
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
-{
-  "title": "Updated title",
-  "completed": true
-}
+{"name":"Website redesign","description":"Plan and deliver the redesign"}
 
-### Update only the completed flag
-PATCH {{baseUrl}}/todos/{{todoId}}
+### List projects
+GET {{baseUrl}}/api/projects?page=1&limit=20
+Authorization: Bearer {{token}}
+
+### Add task
+POST {{baseUrl}}/api/projects/{{projectId}}/tasks
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
-{
-  "completed": false
-}
+{"title":"Create wireframes","priority":2,"due_date":"2027-01-15"}
 
-### Update with invalid title
-PATCH {{baseUrl}}/todos/{{todoId}}
+### List tasks
+GET {{baseUrl}}/api/projects/{{projectId}}/tasks?page=1&limit=20
+Authorization: Bearer {{token}}
+
+### Update task status
+PATCH {{baseUrl}}/api/projects/{{projectId}}/tasks/{{taskId}}
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
-{
-  "title": "   "
-}
+{"status":"IN_PROGRESS"}
 
-### Delete a todo
-DELETE {{baseUrl}}/todos/{{todoId}}
+### Refresh session
+POST {{baseUrl}}/api/auth/refresh
+Content-Type: application/json
 
-### Delete a missing todo
-DELETE {{baseUrl}}/todos/00000000-0000-0000-0000-000000000000
+{"refresh_token":"{{refreshToken}}"}
+
+### Revoke current session
+POST {{baseUrl}}/api/auth/logout
+Authorization: Bearer {{token}}
